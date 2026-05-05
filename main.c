@@ -2,6 +2,7 @@
 #include "miniaudio.h"
 #include "PlayManager.h"
 #include "free_console.h"
+#include "Engine.h"
 #include "controls.h"
 
 #include<stdio.h>
@@ -15,13 +16,13 @@
 int main () {
     atexit(restore_terminal);
     signal(SIGINT, handle_sigint);
-    ma_result result;
-    ma_engine engine;
-    
-    result = ma_engine_init( NULL , &engine);
-
-    if ( result != MA_SUCCESS ) {
-        printf("ERROR AL INICIAR EL MOTOR\n");
+    Player player = {0};
+    player.init_player = init_player;
+    player.play = play;
+    player.set_volume_impl = set_volumen_impl;
+    if ( !player.init_player(&player) ) {
+        printf("%s","ERROR AL INICIAR EL MOTOR: \n", player.result );
+        
         return -1;
     }
     
@@ -46,7 +47,7 @@ int main () {
     int* avis = calloc(count, sizeof( int ));
     if ( !avis ) {
         printf("EROR: No se pudo asignar memoria para avis");
-        ma_engine_uninit(&engine);
+        ma_engine_uninit(&player.engine);
         return -1;
     }
     int* order = calloc ( count, sizeof( int ) );
@@ -66,79 +67,34 @@ int main () {
             avis [ idx ] = 1;
         }
         
-        if (filepath == NULL) {
-            printf("⚠️  Ruta nula, saltando...\n");
-            if ( is_aleatorie ) play_aleatorie(avis, &idx, &count , order , &posi , &ke );
-            else if ( ke ) {
-                if ( ke == 2 ) idx--;
-                else if ( ke == 1 ) idx++;
-            }
-            continue;
+        if ( !player.play(&player, filepath , &is_aleatorie) ) {
+            play_aleatorie(avis, &idx, &count , order, &posi , &ke );
         }
-        
-        FILE* test = fopen(filepath, "rb");
-        if (test == NULL) {
-            printf("⚠️  No se encuentra: %s, saltando...\n", filepath);
-            if ( is_aleatorie ) play_aleatorie(avis, &idx, &count , order , &posi , &ke );
-            else if ( ke ) {
-                if ( ke == 2 ) idx--;
-                else if ( ke == 1 ) idx++;
-            }
-            continue;
-        }
-        fclose(test);
-        
-        printf("▶️  Reproduciendo: %s\n", filepath);
-        ma_sound sound;
-        result = ma_sound_init_from_file(&engine, filepath, 0, NULL, NULL, &sound);
-        if (result != MA_SUCCESS) {
-            printf("⚠️  Error cargando: %s\n", filepath);
-            if ( is_aleatorie ) play_aleatorie(avis, &idx, &count , order, &posi , &ke);
-            else if ( ke ) {
-                if ( ke == 2 ) idx--;
-                else if ( ke == 1 ) idx++;
-            }
-            continue;
-        }
-        
-        
-        result = ma_sound_start(&sound);
-        if (result != MA_SUCCESS) {
-            printf("⚠️  Error iniciando: %s\n", filepath);
-            ma_sound_uninit(&sound);
-            if ( is_aleatorie ) play_aleatorie(avis, &idx, &count , order, &posi, &ke );
-            else if ( ke ) {
-                if ( ke == 2 ) idx--;
-                else if ( ke == 1 ) idx++;
-            }
-            continue;
-        }
-
-
         
         int pause = 0;
-        while (!ma_sound_at_end(&sound) && !should_exit ) {
+        while (!ma_sound_at_end(&player.sound) && !should_exit ) {
             if ( ( ke = get_action() ) ) { 
                 if ( ke == 4 ) {
-                    if ( !pause ) { ma_sound_stop ( &sound ); pause = 1; }
-                    else {ma_sound_start(&sound); pause = 0;}
+                    if ( !pause ) { ma_sound_stop ( &player.sound ); pause = 1; }
+                    else {ma_sound_start(&player.sound); pause = 0;}
                 }
                 else if ( ke == 5 ) {
                     if ( is_aleatorie ) is_aleatorie = 0;
                     else is_aleatorie = 1;
                     printf("Modo aleatorio: %d\n" , is_aleatorie );
                 }
+                else if ( ke == 6 ) player.set_volume_impl( &player, player.volume + 0.1f );
+                else if ( ke == 7 ) player.set_volume_impl( &player, player.volume - 0.1f );
                 else break;
             }
-            ma_sleep(100);
+            ma_sleep(30);
         }
         
-        if ( !pause ) ma_sound_stop( &sound );
-        ma_sound_uninit(&sound);
+        if ( !pause ) ma_sound_stop( &player.sound );
+        ma_sound_uninit(&player.sound);
         
         if ( should_exit ) { printf("SALIENDO\n"); break;}
-        if ( is_aleatorie && ke != 3 ) { 
-            
+        if ( is_aleatorie && ke < 4 ) { 
             play_aleatorie(avis, &idx, &count , order, &posi , &ke ); continue; 
         }
         else if ( ke ) {
@@ -148,7 +104,7 @@ int main () {
                 continue;
             }
             else if ( ke == 1 ) { printf("SIGUIENTE\n");}
-            else {
+            else if ( ke == 4 ) {
                 printf("SALIENDO\n");
                 break;
             }
@@ -160,7 +116,7 @@ int main () {
     }
     
     free(avis);
-    ma_engine_uninit(&engine);
+    ma_engine_uninit(&player.engine);
     
     return 0;
 }

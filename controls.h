@@ -11,9 +11,11 @@ int get_action ( ) {
     if ( n > 0 ) {
         if ( ch == 'n') return 1;
         if ( ch == 'p') return 2;
-        if ( ch == 'q' ) return 3;
-        if ( ch == ' ' ) return 4;
+        if ( ch == ' ' ) return 3;
+        if ( ch == 'q' ) return 4;
         if ( ch == 'a' ) return 5;
+        if ( ch == '+' ) return 6;
+        if ( ch == '-') return 7;
     }
 
     return 0;
