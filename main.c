@@ -40,6 +40,7 @@ int main () {
     printf(" [N] SIGUIENTE CANCION\n");
     printf(" [P] Cancion Anterior\n");
     printf(" [A] Activar / Desactivar Aleatorio\n");
+    printf(" [+ / -] Aumentar volumen / Disminuir Volumen");
     printf(" [Q] SALIR\n");
 
     int count = 0;
