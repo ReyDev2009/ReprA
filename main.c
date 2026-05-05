@@ -26,6 +26,7 @@ int main () {
         return -1;
     }
     
+    player.set_volume_impl(&player, 0.5f);
     printf("Directorio a reproducir: ");
     char in_dir [ 5000 ];
     scanf("%s" , in_dir );
