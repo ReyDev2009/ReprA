@@ -21,10 +21,10 @@ int get_action ( ) {
     return 0;
 }
 
-void play_aleatorie(int* avis, int* idx , const int* count, int* order , int* posi , int* ke ) { 
+void play_aleatorie(int* avis, int* idx , const int* count, int* order , int* posi , int* sig ) { 
     srand(time(NULL));
-    if ( *ke == 2 ) *idx = order [ *posi = *posi - 1 < 0 ? 0 : *posi - 1  ];
-    else if ( *ke == 1 ) {
+    if ( !*sig ) *idx = order [ *posi = *posi - 1 < 0 ? 0 : *posi - 1  ];
+    else if ( *sig == 1 ) {
         if ( order [ *posi + 1 > *count ? *count : *posi + 1  ]  ) {
             *idx = order [ ++*posi ];
         }

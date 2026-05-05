@@ -60,6 +60,7 @@ int main () {
     int ke = 0;
     int p = 1;
     order [ 0 ] = 0;
+    int sig = 1;
     while ( ( ( idx < count && idx >= 0 && !is_aleatorie ) || ( is_aleatorie && vis < count ) ) && posi >= 0 && posi <= count ) {
         const char* filepath = playl[ idx ];
         if ( !avis [ idx ] ) {
@@ -68,13 +69,14 @@ int main () {
         }
         
         if ( !player.play(&player, filepath , &is_aleatorie) ) {
-            play_aleatorie(avis, &idx, &count , order, &posi , &ke );
+            play_aleatorie(avis, &idx, &count , order, &posi , &sig );
+            continue;
         }
         
         int pause = 0;
         while (!ma_sound_at_end(&player.sound) && !should_exit ) {
             if ( ( ke = get_action() ) ) { 
-                if ( ke == 4 ) {
+                if ( ke == 3 ) {
                     if ( !pause ) { ma_sound_stop ( &player.sound ); pause = 1; }
                     else {ma_sound_start(&player.sound); pause = 0;}
                 }
@@ -94,16 +96,19 @@ int main () {
         ma_sound_uninit(&player.sound);
         
         if ( should_exit ) { printf("SALIENDO\n"); break;}
-        if ( is_aleatorie && ke < 4 ) { 
-            play_aleatorie(avis, &idx, &count , order, &posi , &ke ); continue; 
+        if ( is_aleatorie && ke < 4 ) {
+            if ( ke == 2 ) sig = 0;
+            else if ( ke == 1 ) sig = 1;
+            play_aleatorie(avis, &idx, &count , order, &posi , &sig ); continue; 
         }
         else if ( ke ) {
             if (ke == 2 ) {
                 printf("ANTERIOR\n");
                 idx--;
+                sig = 0;
                 continue;
             }
-            else if ( ke == 1 ) { printf("SIGUIENTE\n");}
+            else if ( ke == 1 ) { printf("SIGUIENTE\n"); sig = 1;}
             else if ( ke == 4 ) {
                 printf("SALIENDO\n");
                 break;
